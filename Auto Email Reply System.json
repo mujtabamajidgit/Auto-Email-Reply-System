@@ -1,0 +1,268 @@
+{
+  "name": "Auto Email Reply System",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "maxResults": 8,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -720,
+        -368
+      ],
+      "id": "a936540a-c8c7-4c40-899c-487032214c87",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "94JB4xy0fovsDpah",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.snippet }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "order",
+              "description": "when any email come with the text inside include new order it will separated"
+            },
+            {
+              "category": "inquiry",
+              "description": "If any email includes words inquiry or customers asking any type of question need to separated"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -496,
+        -368
+      ],
+      "id": "ac70a5b5-c93b-47a1-8a84-b96689e8e596",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $('Gmail Trigger').item.json.Subject }}",
+        "message": "={{ $json.candidates[0].content.parts[1].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -448
+      ],
+      "id": "465c9933-9cd6-48df-a7df-f3b874071166",
+      "name": "Create a draft",
+      "webhookId": "1fa7be55-74e7-45c9-a399-d6f51013124a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "94JB4xy0fovsDpah",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemma-4-26b-a4b-it",
+          "mode": "list",
+          "cachedResultName": "models/gemma-4-26b-a4b-it"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=you act as a copy writer and my gmail personal assistant you will reply to this email : \n\n{{ $json.snippet }}\n\nyou have to give me replies in two types\none you give me subject line and one inner email response"
+            }
+          ]
+        },
+        "simplify": false,
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        -448
+      ],
+      "id": "c76122af-fe82-42e1-ab33-5ad11f316a04",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "c1RIbvX261b3wdC5",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        -144
+      ],
+      "id": "1733b9c9-c9b4-442e-ab7f-6674a11cf92f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "c1RIbvX261b3wdC5",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=you act as a copy writer and my gmail personal assistant you will reply to this email : \n{{ $json.snippet }}\n\nyou have to give me replies in two types\none you give me subject line and one inner email response"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        -272
+      ],
+      "id": "898dbce1-6902-4df0-b9e0-c52921d9b988",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "c1RIbvX261b3wdC5",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $('Gmail Trigger').item.json.Subject }}",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -272
+      ],
+      "id": "46d129a4-fab0-40bb-a916-8bda3d2466d5",
+      "name": "Create a draft1",
+      "webhookId": "492f1a61-b8bc-4c81-91c0-ec2109409863",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "94JB4xy0fovsDpah",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Create a draft1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "66ba1665-8d71-4519-9d1d-1e590e18d5a8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "56607017d68f342e45e9cf6aeeae1b9181435c727032b7ef14e62a978ff58395"
+  },
+  "nodeGroups": [],
+  "id": "ZNqnfRlTZ9jNDj2c",
+  "tags": []
+}
